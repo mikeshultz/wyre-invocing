@@ -46,8 +46,6 @@ def api_add_invoice():
 
     invoice_result = add_invoice(incoming_json)
 
-    log.debug('added invoice_id {}', invoice_result[0])
-
     if invoice_result:
         return make_response(invoice_result[0], success=True)
     else:
