@@ -1,0 +1,46 @@
+version: "3"
+services:
+  ganache:
+    image: "trufflesuite/ganache-cli:latest"
+    ports:
+      - "8545:8545"
+    networks:
+      - wyre
+  postgres:
+    image: "postgres:11"
+    restart: always
+    environment:
+      POSTGRES_DB: wyre_test
+      POSTGRES_USER: wyre
+      POSTGRES_PASSWORD: wyre
+    ports:
+      - "5432:5432"
+    networks:
+      - wyre
+  api:
+    build:
+      context: .
+      dockerfile: ./deployment/dockerfiles/wyre-invoicing-api
+    environment:
+      PGHOST: postgres
+      PGDATABASE: wyre_test
+      PGUSER: wyre
+      PGPASSWORD: wyre
+    ports:
+      - "8000:8000"
+    networks:
+      - wyre
+  updater:
+    build:
+      context: .
+      dockerfile: ./deployment/dockerfiles/wyre-updater
+    environment:
+      PGHOST: postgres
+      PGDATABASE: wyre_test
+      PGUSER: wyre
+      PGPASSWORD: wyre
+      JSONRPC_ENDPOINT: http://ganache:8545/
+    networks:
+      - wyre
+networks:
+  wyre:

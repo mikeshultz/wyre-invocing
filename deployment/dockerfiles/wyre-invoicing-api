@@ -1,0 +1,22 @@
+FROM python:3.7
+
+COPY README.md /app/
+COPY setup.py /app/
+COPY requirements.txt /app/
+COPY requirements.dev.txt /app/
+COPY ./wyreinvoicing /app/wyreinvoicing
+
+WORKDIR  /app
+
+RUN python --version
+RUN ls -lah
+RUN python setup.py install
+
+ENV ENC_KEY_FILE="/app/.wyrekey"
+
+RUN python -m wyreinvoicing createkey
+RUN ls -lah /app
+
+EXPOSE 8000
+#CMD wiapi --bind 0.0.0.0:8000
+CMD gunicorn -b 0.0.0.0:8000 --log-level debug wyreinvoicing.api:app

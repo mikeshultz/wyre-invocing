@@ -1,0 +1,15 @@
+FROM python:3.7
+
+COPY README.md /app/
+COPY setup.py /app/
+COPY requirements.txt /app/
+COPY requirements.dev.txt /app/
+COPY ./wyreinvoicing /app/wyreinvoicing
+
+WORKDIR  /app
+
+RUN python setup.py install
+
+ENV ENC_KEY_FILE="/app/.wyrekey"
+
+CMD wiupdater --json-rpc $JSONRPC_ENDPOINT

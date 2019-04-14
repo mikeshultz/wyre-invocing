@@ -1,0 +1,6 @@
+psycopg2==2.8.1
+pycryptodome==3.8.1
+eth-account==0.3.0
+flask==1.0.2
+gunicorn==19.9.0
+web3==4.9.1
