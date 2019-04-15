@@ -1,5 +1,6 @@
 """ Common constants and functions """
 import flask
+from enum import IntEnum
 from decimal import Decimal
 from web3 import Web3
 
@@ -28,6 +29,13 @@ class WyreJSONEncoder(flask.json.JSONEncoder):
                 return float(o)
 
         return flask.json.JSONEncoder.default(self, o)
+
+
+class InvoiceState(IntEnum):
+    CREATED = 0
+    EXPIRED = 1
+    PARTIAL = 2
+    PAID = 3
 
 
 def get_web3_provider(endpoint):

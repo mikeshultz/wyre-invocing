@@ -3,6 +3,7 @@ from functools import wraps
 from .accounts import create_account
 from .crypt import encrypt, decrypt
 from .validation import validate_invoice
+from .common import InvoiceState
 from .log import get_logger
 
 EXPECTED_TABLES = ['state', 'invoice']
@@ -26,8 +27,9 @@ CREATE TABLE account (
 
 CREATE TABLE invoice (
     invoice_id SERIAL PRIMARY KEY,
-    state_id INT REFERENCES state (state_id) NOT NULL DEFAULT 1,
+    state_id INT REFERENCES state (state_id) NOT NULL DEFAULT 0,
     account_id INT REFERENCES account (account_id) NOT NULL,
+    created TIMESTAMP DEFAULT now(),
     total NUMERIC(24),
     paid NUMERIC(24),
     drain_txhash VARCHAR(66)
@@ -131,6 +133,10 @@ def unlock_account(address, connection):
 def get_invoice(invoice_id, connection):
     """ Get a specific invoice """
 
+    if type(invoice_id) != int:
+        log.warning('Provided invoice_id is not an integer')
+        return None
+
     with connection.cursor() as cursor:
 
         cursor.execute(
@@ -230,13 +236,46 @@ def get_paid_invoices(connection):
 @provide_connection
 def update_invoice_paid(invoice_id, balance, connection):
     """ Update the invoice account balance """
+
+    if type(invoice_id) != int:
+        log.warning('Provided invoice_id is not an integer')
+        return None
+
+    if type(balance) != int:
+        log.warning('Provided balance is not an integer')
+        return None
+
     with connection.cursor() as cursor:
+
+        # Get the invoice
+        cursor.execute(
+            "SELECT invoice_id, state_id, total, paid"
+            " FROM invoice WHERE invoice_id = %s;",
+            (invoice_id,)
+        )
+
+        if cursor.rowcount < 1:
+            connection.rollback()
+            return False
+
+        invoice = cursor.fetchone()
+
+        state_id = invoice[1]
+        total = invoice[2]
+        log.debug('Total: {}, Paid: {}'.format(total, balance))
+        if balance > 0 and balance < total:
+            log.debug('Setting invoice state PARTIAL')
+            state_id = InvoiceState.PARTIAL
+        elif balance >= total:
+            log.debug('Setting invoice state PAID')
+            state_id = InvoiceState.PAID
 
         cursor.execute(
             "UPDATE invoice SET"
-            " paid = %s"
+            " paid = %s,"
+            " state_id = %s"
             " WHERE invoice_id = %s;",
-            (balance, invoice_id)
+            (balance, state_id, invoice_id)
         )
         if cursor.rowcount < 1:
             connection.rollback()
@@ -249,6 +288,18 @@ def update_invoice_paid(invoice_id, balance, connection):
 @provide_connection
 def update_invoice_drained(invoice_id, txhash, connection):
     """ Get unpaid invoices """
+
+    if type(invoice_id) != int:
+        log.warning('Provided invoice_id is not an integer')
+        return None
+
+    if type(txhash) != str:
+        log.warning('Provided transaction hash is not the right type')
+        return None
+
+    if len(txhash) != 66:
+        log.warning('Provided transaction hash is not the right length')
+        return None
 
     with connection.cursor() as cursor:
 

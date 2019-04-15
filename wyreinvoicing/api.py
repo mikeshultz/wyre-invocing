@@ -4,6 +4,7 @@ import time
 import argparse
 from subprocess import Popen
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from .db import get_invoice, get_invoices, add_invoice
 from .common import WyreJSONEncoder
 from .log import get_logger
@@ -11,15 +12,27 @@ from .log import get_logger
 log = get_logger(__name__)
 app = Flask(__name__)
 app.json_encoder = WyreJSONEncoder
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 
-def make_response(results=None, success=True):
+def make_headers(headers):
+    default_headers = {
+        'Content-Type': 'application/json',
+    }
+    if headers and isinstance(headers, dict):
+        return default_headers.update(headers)
+    return default_headers
+
+
+def make_response(results=None, success=True, headers=None):
     """ Build a response object for success """
     resp = {
         'success': success
     }
     resp.update({'result': results})
-    return jsonify(resp)
+    response = jsonify(resp)
+    response.headers = make_headers(headers)
+    return response
 
 
 def db_invoice_to_json(dbi):
@@ -27,8 +40,8 @@ def db_invoice_to_json(dbi):
         'invoice_id': dbi[0],
         'state_id': dbi[1],
         'address': dbi[2],
-        'total': dbi[3],
-        'paid': dbi[4]
+        'total': str(dbi[3]),
+        'paid': str(dbi[4])
     }
 
 
@@ -40,9 +53,12 @@ def api_show_invoices():
 
 @app.route('/invoice', methods=['POST'])
 def api_add_invoice():
-    assert request.content_type == 'application/json', 'Wrong content-type'
+    assert 'application/json' in request.content_type, 'Wrong content-type'
 
     incoming_json = request.get_json()
+
+    log.info("Adding new invoice")
+    log.debug(incoming_json)
 
     invoice_result = add_invoice(incoming_json)
 
@@ -54,7 +70,17 @@ def api_add_invoice():
 
 @app.route('/invoice/<invoice_id>', methods=['GET'])
 def api_invoice(invoice_id):
+
+    try:
+        invoice_id = int(invoice_id)
+    except ValueError:
+        return make_response(success=False)
+
     res = get_invoice(invoice_id)
+
+    if not res:
+        log.debug("Unable to fetch invoice #".format(invoice_id))
+        return make_response(success=False)
     return make_response(db_invoice_to_json(res))
 
 
