@@ -1,0 +1,26 @@
+#invoices {}
+
+.state-indicator {
+    color: #000;
+    padding: 1rem;
+}
+
+.state-indicator.paid {
+    background: #51AE1A;
+    color: #FFF;
+}
+
+.state-indicator.partial {
+    background: #3BA9E0;
+    color: #FFF;
+}
+
+.state-indicator.expired {
+    background: #BCC5CA;
+    color: #FFF;
+}
+
+.state-indicator.created {
+    background: #DF65DB;
+    color: #FFF;
+}

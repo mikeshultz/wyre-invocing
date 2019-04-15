@@ -1,0 +1,42 @@
+button, .button {
+  background: #1A67AE;
+  border-color: #1A67AE;
+  margin-right: 0.5rem;
+}
+.button.button-outline {
+  color: #1A67AE;
+}
+
+section {
+  padding: 1rem;
+}
+
+.App {
+  
+}
+
+.App-header {
+  background-color: #1A67AE;
+  color: #fff;
+  padding: 1rem 1rem 0 1rem;
+}
+
+.App-header h1 {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 0;
+}
+
+.form-append {
+}
+.form-append input {
+  width: calc(100% - 1rem);
+}
+.form-append .append {
+    float: right;
+    position: relative;
+    right: 2rem;
+    bottom: -1rem;
+    display: block;
+    width: 1rem;
+}

@@ -14,11 +14,9 @@ After invoice accounts have been sent payments and you want to drain the invoice
 
     docker-compose exec api widrain --json-rpc http://ganache:8545/ [dest_address]
 
-### Make Payment
+### Frontend
 
-For the purposes of this demo, you can simply trigger a payment with the `pay.py` script.
-
-    python pay.py [invoice_account_address] [amount_in_wei]
+You should find the frontend app at [http://localhost:3000/](http://localhost:3000/).
 
 ## API Requests
 

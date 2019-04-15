@@ -21,6 +21,9 @@ services:
     build:
       context: .
       dockerfile: ./deployment/dockerfiles/wyre-invoicing-api
+    depends_on:
+      - postgres
+      - ganache
     environment:
       PGHOST: postgres
       PGDATABASE: wyre_test
@@ -34,12 +37,27 @@ services:
     build:
       context: .
       dockerfile: ./deployment/dockerfiles/wyre-updater
+    depends_on:
+      - api
+      - postgres
+      - ganache
     environment:
       PGHOST: postgres
       PGDATABASE: wyre_test
       PGUSER: wyre
       PGPASSWORD: wyre
       JSONRPC_ENDPOINT: http://ganache:8545/
+    networks:
+      - wyre
+  frontend:
+    build:
+      context: .
+      dockerfile: ./deployment/dockerfiles/wyre-frontend
+    depends_on:
+      - api
+      - ganache
+    ports:
+      - "3000:3000"
     networks:
       - wyre
 networks:

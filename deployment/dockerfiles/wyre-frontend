@@ -1,0 +1,12 @@
+FROM node:10
+
+COPY wyreinvoicing-frontend/public /app/public
+COPY wyreinvoicing-frontend/src /app/src
+COPY wyreinvoicing-frontend/package.json /app/package.json
+
+WORKDIR  /app
+RUN ls -lah /app
+RUN yarn install
+
+EXPOSE 3000
+CMD yarn start
